@@ -27,7 +27,7 @@ jobs:
         uses: https://github.com/cloudbees-io/ghactions-run-workflow@v2
         with:
           token: ${{ secrets.GH_SECURITY_PAT_PB}}
-          org-name: cloudbees-compliance
-          repo-name: demo-go-service
-          branch-name: gk_gha
-          workflow-name: 'my-gha-workflow'
+          org-name: QA-MM-Postgres Org
+          repo-name: MultiLangRepo-Dec4
+          branch-name: main
+          workflow-name: 'my-workflow'
