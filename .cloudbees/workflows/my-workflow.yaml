@@ -16,7 +16,7 @@ jobs:
       - name: Get source code
         uses: cloudbees-io/checkout@v1
       - name: Setup git credentials
-        uses: cloudbees-io/configure-git-global-credentials@v1
+        uses: cloudbees-io/configure-git-global-credentials@v1 
       - name: Configure JFrog OCI credentials
         uses: cloudbees-io/configure-oci-credentials@v1
         with:
