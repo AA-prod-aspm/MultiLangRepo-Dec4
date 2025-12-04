@@ -1,42 +1,35 @@
-apiVersion: automation.cloudbees.io/v1alpha1
+name: jfrog-artifactory-upload-file
 kind: workflow
-name: My workflow
+apiVersion: automation.cloudbees.io/v1alpha1
+
 on:
   push:
     branches:
-      - "**"
-  workflow_dispatch:
-permissions:
-  scm-token-own: read
-  scm-token-org: read
-  id-token: write
+      - prasen-upload
 jobs:
-  build:
+  upload-file-job:
     steps:
-      - name: Get source code
+      - name: checkout-source-code
         uses: cloudbees-io/checkout@v1
+
+      - name: Configure JFrog OCI credentials
+        uses: cloudbees-io/configure-oci-credentials@v1
+        with:
+          registry: cbjfrog.saas-preprod.beescloud.com
+          username: admin
+          password: ${{ secrets.JFROG_TOKEN }}
+
       - id: build-container
-        name: Build container image
-        uses: docker://gcr.io/kaniko-project/executor:debug
-        run: |
-          /kaniko/executor --context $CLOUDBEES_WORKSPACE --build-arg USER=cbp-qa-automation,TOKEN=${{ secrets.GH_SECURITY_PAT }} --dockerfile $CLOUDBEES_WORKSPACE/Dockerfile --tar-path $CLOUDBEES_WORKSPACE/container-image.tar --no-push
-      - id: register-artifact
-        name: Register the artifact
-        uses: cloudbees-io/register-build-artifact@v1
+        name: Build and push container image to JFrog
+        uses: cloudbees-io/kaniko@v1
         with:
-          name: javarepo
-          version: hac-0.1
-          url: 020229604682.dkr.ecr.us-east-1.amazonaws.com/throwaway/actions/vulnerable-image:hac-0.1
-      - name: Print output parameter artifact ID
-        uses: docker://alpine:latest
-        shell: sh
-        run: |
-           echo "artifact ID for new-vulnerablegorepo4gh:${{ cloudbees.version }} is: ${{ steps.register-artifact.outputs.artifact-id }}"
-      - id: upload-binary
-        name: Upload binary using action
-        uses: cloudbees-io/asset-chain-utils-preprod/upload-binary@v1
-        with:
-          file-path: container-image.tar
-          file-type: BINARY_CONTAINER
-          debug: "true"
-          alias: 020229604682.dkr.ecr.us-east-1.amazonaws.com/throwaway/actions/vulnerable-image:hac-0.1
+          destination: cbjfrog.saas-preprod.beescloud.com/jfrog-test-docker-target-repo/test-image:1.11
+          build-args: USER=cbp-dev,TOKEN=${{ secrets.GH_SECURITY_PAT }}
+          context: ${{ cloudbees.workspace }}
+          dockerfile: Dockerfile
+     
+      # - name: Print output parameter artifact ID from JFrog upload action
+      #   uses: docker://alpine:latest
+      #   shell: sh
+      #   run: |
+      #     echo "artifact ID for my-artifact is: ${{ steps.build-container.outputs.artifact-id }}"
